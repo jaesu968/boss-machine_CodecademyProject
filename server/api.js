@@ -1,7 +1,19 @@
 const express = require('express');
 const apiRouter = express.Router();
+// import db functions from db.js
+const { 
+  getAllFromDatabase,
+  getFromDatabaseById,
+  addToDatabase,
+  updateInstanceInDatabase,
+  deleteFromDatabasebyId,
+  deleteAllFromDatabase,
+  createMeeting
+} = require('./db.js');
+// import middleware from /server/checkMillionDollarIdea.js
+const checkMillionDollarIdea = require('./checkMillionDollarIdea.js');
 
-// routes go here
+// routes will go here
 
 // /api/minions routes 
 // GET /api/minions 
@@ -38,11 +50,21 @@ apiRouter.get('/minions/:minionId', (req, res, next) => {
   apiRouter.put('/minions/:minionId', (req, res, next) => {
     // there is an updateInstanceInDatabase() function that you can use to update a minion in the database
     // the instance must provide a valid .id property
-    const updatedMinion = updateInstanceInDatabase('minions', req.body);
+    const updatedMinion = updateInstanceInDatabase('minions', req.body); // check whether the target minion exists using getFromDatabaseById() before updating
+    // if not found, send a 404 status code 
     if (updatedMinion) {
       res.send(updatedMinion);
     } else {
-      res.status(400).send();
+      res.status(404).send();
+      // force the update payload id to match the route param
+      updateData = { ...req.body, id: req.params.minionId };
+      // if update returns null or throws a validation error, return a 400 status code
+        if (updateInstanceInDatabase('minions', updateData) === null) {
+            res.status(400).send();
+        } else {
+            // return the updated object 
+            res.send(updateInstanceInDatabase('minions', updateData));
+        }
     }
   });
   // DELETE /api/minions/:minionId
@@ -51,7 +73,7 @@ apiRouter.get('/minions/:minionId', (req, res, next) => {
     // there is a deleteFromDatabasebyId() function that you can use to delete a minion from the database
     const deletedMinion = deleteFromDatabasebyId('minions', req.params.minionId);
     if (deletedMinion) {
-      res.send(deletedMinion);
+      res.status(204).send(deletedMinion);
     } else {
       res.status(404).send();
     }
@@ -69,7 +91,7 @@ apiRouter.get('/minions/:minionId', (req, res, next) => {
   }); 
   // POST /api/ideas 
   // to create a new idea and save it to the database
-  apiRouter.post('/ideas', (req, res, next) => {
+  apiRouter.post('/ideas', checkMillionDollarIdea, (req, res, next) => {
     // use the addToDatabase() function to add a new idea to the database like above and send the newly created idea back in the response
     const newIdea = addToDatabase('ideas', req.body);
     if (newIdea) {
@@ -91,14 +113,26 @@ apiRouter.get('/minions/:minionId', (req, res, next) => {
   }); 
 // PUT /api/ideas/:ideaId
 // to update a single idea by id
-apiRouter.put('/ideas/:ideaId', (req, res, next) => {
+apiRouter.put('/ideas/:ideaId', checkMillionDollarIdea, (req, res, next) => {
     // use the updateInstanceInDatabase() function to update an idea in the database like above and send the updated idea back in the response
     // the instance must provide a valid .id property
-    const updatedIdea = updateInstanceInDatabase('ideas', req.body);
+    // 404 if id not found , payload id forced from req.params.ideaId
+    // 400 for invalid schema/body 
+    // 200 with updated object if update is successful
+    const updatedIdea = updateInstanceInDatabase('ideas', req.body); // check whether the target idea exists using getFromDatabaseById() before updating
     if (updatedIdea) {
-      res.send(updatedIdea);
+      res.status(200).send(updatedIdea);
     } else {
-      res.status(400).send();
+      res.status(404).send();
+      // force the update payload id to match the route param
+      updateData = { ...req.body, id: req.params.ideaId };
+      // if update returns null or throws a validation error, return a 400 status code
+        if (updateInstanceInDatabase('ideas', updateData) === null) {
+            res.status(400).send();
+        } else {
+            // return the updated object 
+            res.status(200).send(updateInstanceInDatabase('ideas', updateData));
+        }
     }
   }); 
   // DELETE /api/ideas/:ideaId
@@ -107,7 +141,7 @@ apiRouter.put('/ideas/:ideaId', (req, res, next) => {
     // use the deleteFromDatabasebyId() function to delete an idea from the database like above and send the deleted idea back in the response
     const deletedIdea = deleteFromDatabasebyId('ideas', req.params.ideaId);
     if (deletedIdea) {
-      res.send(deletedIdea);
+      res.status(204).send(deletedIdea);
     } else {
       res.status(404).send();
     }
@@ -127,10 +161,12 @@ apiRouter.put('/ideas/:ideaId', (req, res, next) => {
   // to create a new meeting and save it to the database
   // no request body is necessary as meetings are automatically created by the server upon request. 
   apiRouter.post('/meetings', (req, res, next) => {
-    // use the addToDatabase() function to add a new meeting to the database like above and send the newly created meeting back in the response
-    const newMeeting = addToDatabase('meetings', {});
-    if (newMeeting) {
-      res.status(201).send(newMeeting);
+    // use createMeeting() function to create a new meeting and add it to the database, then send the newly created meeting back in the response
+    const newMeeting = createMeeting();
+    // then persist with addToDatabase() function
+    const addedMeeting = addToDatabase('meetings', newMeeting);
+    if (addedMeeting) {
+      res.status(201).send(addedMeeting); // return 201 with saved meeting object if successful
     } else {
       res.status(400).send();
     }
