@@ -57,5 +57,62 @@ apiRouter.get('/minions/:minionId', (req, res, next) => {
     }
   }); 
 
+  // /api/ideas routes 
+  // where you can use CRUD operations to manage ideas in the database
+
+  // GET /api/ideas
+  // to get an array of all ideas in the database
+  apiRouter.get('/ideas', (req, res, next) => {
+    // use the getAllFromDatabase() function to get all ideas from the database like above and send them back in the response
+    const ideas = getAllFromDatabase('ideas');
+    res.send(ideas);
+  }); 
+  // POST /api/ideas 
+  // to create a new idea and save it to the database
+  apiRouter.post('/ideas', (req, res, next) => {
+    // use the addToDatabase() function to add a new idea to the database like above and send the newly created idea back in the response
+    const newIdea = addToDatabase('ideas', req.body);
+    if (newIdea) {
+      res.status(201).send(newIdea);
+    } else {
+      res.status(400).send();
+    }   
+  }); 
+  // GET /api/ideas/:ideaId
+  // to get a single idea by id
+  apiRouter.get('/ideas/:ideaId', (req, res, next) => {
+    // use the getFromDatabaseById() function to get a single idea by id like above and send it back in the response
+    const idea = getFromDatabaseById('ideas', req.params.ideaId);
+    if (idea) {
+      res.send(idea);
+    } else {
+      res.status(404).send();
+    }
+  }); 
+// PUT /api/ideas/:ideaId
+// to update a single idea by id
+apiRouter.put('/ideas/:ideaId', (req, res, next) => {
+    // use the updateInstanceInDatabase() function to update an idea in the database like above and send the updated idea back in the response
+    // the instance must provide a valid .id property
+    const updatedIdea = updateInstanceInDatabase('ideas', req.body);
+    if (updatedIdea) {
+      res.send(updatedIdea);
+    } else {
+      res.status(400).send();
+    }
+  }); 
+  // DELETE /api/ideas/:ideaId
+  // to delete a single idea by id 
+  apiRouter.delete('/ideas/:ideaId', (req, res, next) => {
+    // use the deleteFromDatabasebyId() function to delete an idea from the database like above and send the deleted idea back in the response
+    const deletedIdea = deleteFromDatabasebyId('ideas', req.params.ideaId);
+    if (deletedIdea) {
+      res.send(deletedIdea);
+    } else {
+      res.status(404).send();
+    }
+  });
+
+  
 
 module.exports = apiRouter;
