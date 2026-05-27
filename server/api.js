@@ -113,6 +113,35 @@ apiRouter.put('/ideas/:ideaId', (req, res, next) => {
     }
   });
 
-  
+  // routes for meetings 
+  // /api/meetings where you can use CRUD operations to manage meetings in the database
+
+  // GET /api/meetings 
+  // to get an array of all meetings in the database
+  apiRouter.get('/meetings', (req, res, next) => {
+    // use the getAllFromDatabase() function to get all meetings from the database like above and send them back in the response
+    const meetings = getAllFromDatabase('meetings');
+    res.send(meetings);
+  }); 
+  // POST /api/meetings
+  // to create a new meeting and save it to the database
+  // no request body is necessary as meetings are automatically created by the server upon request. 
+  apiRouter.post('/meetings', (req, res, next) => {
+    // use the addToDatabase() function to add a new meeting to the database like above and send the newly created meeting back in the response
+    const newMeeting = addToDatabase('meetings', {});
+    if (newMeeting) {
+      res.status(201).send(newMeeting);
+    } else {
+      res.status(400).send();
+    }
+  }); 
+// DELETE /api/meetings 
+// to delete all meetings from the database
+apiRouter.delete('/meetings', (req, res, next) => {
+    // use the deleteAllFromDatabase() function to delete all meetings from the database and send a success status code with no response body
+    deleteAllFromDatabase('meetings');
+    res.status(204).send();
+  });
+
 
 module.exports = apiRouter;
