@@ -113,28 +113,28 @@ apiRouter.get('/minions/:minionId', (req, res, next) => {
   }); 
 // PUT /api/ideas/:ideaId
 // to update a single idea by id
-apiRouter.put('/ideas/:ideaId', checkMillionDollarIdea, (req, res, next) => {
-    // use the updateInstanceInDatabase() function to update an idea in the database like above and send the updated idea back in the response
-    // the instance must provide a valid .id property
-    // 404 if id not found , payload id forced from req.params.ideaId
-    // 400 for invalid schema/body 
-    // 200 with updated object if update is successful
-    const updatedIdea = updateInstanceInDatabase('ideas', req.body); // check whether the target idea exists using getFromDatabaseById() before updating
-    if (updatedIdea) {
-      res.status(200).send(updatedIdea);
-    } else {
-      res.status(404).send();
-      // force the update payload id to match the route param
-      updateData = { ...req.body, id: req.params.ideaId };
-      // if update returns null or throws a validation error, return a 400 status code
-        if (updateInstanceInDatabase('ideas', updateData) === null) {
-            res.status(400).send();
-        } else {
-            // return the updated object 
-            res.status(200).send(updateInstanceInDatabase('ideas', updateData));
-        }
+apiRouter.put('/ideas/:ideaId', (req, res, next) => {
+    // get the existing idea from the database using getFromDatabaseById() and check if it exists before updating
+    const existingIdea = getFromDatabaseById('ideas', req.params.ideaId);
+    if (!existingIdea) {
+        return res.status(404).send(); // if it doesn't exist, send a 404 response. 
     }
-  }); 
+    // call checkMillionDollarIdea() middleware function to validate the updated idea before updating in the database
+    checkMillionDollarIdea(req, res, () => {
+    const updateData = { ...req.body, id: req.params.ideaId }; // force the update payload id to match the route param
+    // use try catch to update the idea in the database using updateInstanceInDatabase() function and handle any validation errors that may be thrown
+    try {
+        const updatedIdea = updateInstanceInDatabase('ideas', updateData); 
+        if (!updatedIdea){
+            return res.status(400).send(); // if updateInstanceInDatabase() returns null, send a 400 status code
+        }
+        return res.status(200).send(updatedIdea); // return the updated object if successful
+        } catch (error) {
+    return res.status(400).send(); // if updateInstanceInDatabase() throws a validation error, return a 400 status code
+    }
+    });
+}); 
+
   // DELETE /api/ideas/:ideaId
   // to delete a single idea by id 
   apiRouter.delete('/ideas/:ideaId', (req, res, next) => {
