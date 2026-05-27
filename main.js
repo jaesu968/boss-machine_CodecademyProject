@@ -10,3 +10,8 @@ if (require.main === module) {
   // Add your code to start the server listening at PORT below:
 
 }
+
+// start listening on the provided PORT 
+app.listen(PORT, () => {
+  console.log(`Server is listening on port ${PORT}`);
+});

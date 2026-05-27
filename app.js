@@ -11,7 +11,7 @@ module.exports = app;
 app.use(cors());
 
 
-// Add middware for parsing request bodies here:
+// Add middleware for parsing request bodies here:
 app.use(bodyParser.json());
 
 
